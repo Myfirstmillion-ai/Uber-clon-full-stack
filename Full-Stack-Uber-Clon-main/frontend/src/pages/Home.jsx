@@ -15,25 +15,26 @@ import { useNavigate } from 'react-router-dom';
 import LiveTracking from '../components/LiveTracking';
 
 const Home = () => {
-    const [ pickup, setPickup ] = useState('')
-    const [ destination, setDestination ] = useState('')
-    const [ panelOpen, setPanelOpen ] = useState(false)
+    const [pickup, setPickup] = useState('')
+    const [destination, setDestination] = useState('')
+    const [panelOpen, setPanelOpen] = useState(false)
+    const [menuOpen, setMenuOpen] = useState(false)
     const vehiclePanelRef = useRef(null)
     const confirmRidePanelRef = useRef(null)
     const vehicleFoundRef = useRef(null)
     const waitingForDriverRef = useRef(null)
     const panelRef = useRef(null)
     const panelCloseRef = useRef(null)
-    const [ vehiclePanel, setVehiclePanel ] = useState(false)
-    const [ confirmRidePanel, setConfirmRidePanel ] = useState(false)
-    const [ vehicleFound, setVehicleFound ] = useState(false)
-    const [ waitingForDriver, setWaitingForDriver ] = useState(false)
-    const [ pickupSuggestions, setPickupSuggestions ] = useState([])
-    const [ destinationSuggestions, setDestinationSuggestions ] = useState([])
-    const [ activeField, setActiveField ] = useState(null)
-    const [ fare, setFare ] = useState({})
-    const [ vehicleType, setVehicleType ] = useState(null)
-    const [ ride, setRide ] = useState(null)
+    const [vehiclePanel, setVehiclePanel] = useState(false)
+    const [confirmRidePanel, setConfirmRidePanel] = useState(false)
+    const [vehicleFound, setVehicleFound] = useState(false)
+    const [waitingForDriver, setWaitingForDriver] = useState(false)
+    const [pickupSuggestions, setPickupSuggestions] = useState([])
+    const [destinationSuggestions, setDestinationSuggestions] = useState([])
+    const [activeField, setActiveField] = useState(null)
+    const [fare, setFare] = useState({})
+    const [vehicleType, setVehicleType] = useState(null)
+    const [ride, setRide] = useState(null)
 
     const navigate = useNavigate()
 
@@ -42,11 +43,9 @@ const Home = () => {
 
     useEffect(() => {
         socket.emit("join", { userType: "user", userId: user._id })
-    }, [ user ])
+    }, [user])
 
     socket.on('ride-confirmed', ride => {
-
-
         setVehicleFound(false)
         setWaitingForDriver(true)
         setRide(ride)
@@ -55,9 +54,8 @@ const Home = () => {
     socket.on('ride-started', ride => {
         console.log("ride")
         setWaitingForDriver(false)
-        navigate('/riding', { state: { ride } }) // Updated navigate to include ride data
+        navigate('/riding', { state: { ride } })
     })
-
 
     const handlePickupChange = async (e) => {
         setPickup(e.target.value)
@@ -67,7 +65,6 @@ const Home = () => {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`
                 }
-
             })
             setPickupSuggestions(response.data)
         } catch {
@@ -99,7 +96,6 @@ const Home = () => {
             gsap.to(panelRef.current, {
                 height: '70%',
                 padding: 24
-                // opacity:1
             })
             gsap.to(panelCloseRef.current, {
                 opacity: 1
@@ -108,14 +104,12 @@ const Home = () => {
             gsap.to(panelRef.current, {
                 height: '0%',
                 padding: 0
-                // opacity:0
             })
             gsap.to(panelCloseRef.current, {
                 opacity: 0
             })
         }
-    }, [ panelOpen ])
-
+    }, [panelOpen])
 
     useGSAP(function () {
         if (vehiclePanel) {
@@ -127,7 +121,7 @@ const Home = () => {
                 transform: 'translateY(100%)'
             })
         }
-    }, [ vehiclePanel ])
+    }, [vehiclePanel])
 
     useGSAP(function () {
         if (confirmRidePanel) {
@@ -139,7 +133,7 @@ const Home = () => {
                 transform: 'translateY(100%)'
             })
         }
-    }, [ confirmRidePanel ])
+    }, [confirmRidePanel])
 
     useGSAP(function () {
         if (vehicleFound) {
@@ -151,7 +145,7 @@ const Home = () => {
                 transform: 'translateY(100%)'
             })
         }
-    }, [ vehicleFound ])
+    }, [vehicleFound])
 
     useGSAP(function () {
         if (waitingForDriver) {
@@ -163,8 +157,7 @@ const Home = () => {
                 transform: 'translateY(100%)'
             })
         }
-    }, [ waitingForDriver ])
-
+    }, [waitingForDriver])
 
     async function findTrip() {
         setVehiclePanel(true)
@@ -177,10 +170,7 @@ const Home = () => {
             }
         })
 
-
         setFare(response.data)
-
-
     }
 
     async function createRide() {
@@ -193,25 +183,105 @@ const Home = () => {
                 Authorization: `Bearer ${localStorage.getItem('token')}`
             }
         })
-
-
     }
 
     return (
         <div className='h-screen relative overflow-hidden'>
-            <img className='w-16 absolute left-5 top-5' src="https://upload.wikimedia.org/wikipedia/commons/c/cc/Uber_logo_2018.png" alt="" />
+            {/* Header con logo y menú hamburguesa */}
+            <div className='absolute left-0 right-0 top-0 z-10 flex items-center justify-between p-4 sm:p-5'>
+                <img className='w-12 sm:w-16' src="https://upload.wikimedia.org/wikipedia/commons/c/cc/Uber_logo_2018.png" alt="Logo" />
+                
+                <button 
+                    onClick={() => setMenuOpen(!menuOpen)}
+                    className='h-10 w-10 bg-white rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition-all'
+                >
+                    <i className="ri-menu-line text-xl"></i>
+                </button>
+            </div>
+
+            {/* Menú lateral */}
+            {menuOpen && (
+                <>
+                    <div 
+                        className='fixed inset-0 bg-black bg-opacity-50 z-20'
+                        onClick={() => setMenuOpen(false)}
+                    ></div>
+                    <div className='fixed right-0 top-0 h-full w-64 sm:w-80 bg-white z-30 shadow-2xl p-6 overflow-y-auto'>
+                        <button 
+                            onClick={() => setMenuOpen(false)}
+                            className='absolute top-4 right-4 h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100'
+                        >
+                            <i className="ri-close-line text-xl"></i>
+                        </button>
+                        
+                        <div className='mt-12'>
+                            <div className='flex items-center gap-3 mb-6'>
+                                <div className='h-16 w-16 bg-gray-200 rounded-full flex items-center justify-center'>
+                                    <i className="ri-user-line text-2xl text-gray-600"></i>
+                                </div>
+                                <div>
+                                    <h3 className='font-semibold text-lg'>{user?.fullname?.firstname} {user?.fullname?.lastname}</h3>
+                                    <p className='text-sm text-gray-500'>{user?.email}</p>
+                                </div>
+                            </div>
+
+                            <div className='space-y-2'>
+                                <button 
+                                    onClick={() => {
+                                        navigate('/user-profile')
+                                        setMenuOpen(false)
+                                    }}
+                                    className='w-full flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg transition-all'
+                                >
+                                    <i className="ri-user-settings-line text-xl"></i>
+                                    <span>Editar Perfil</span>
+                                </button>
+
+                                <button className='w-full flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg transition-all'>
+                                    <i className="ri-history-line text-xl"></i>
+                                    <span>Historial de Viajes</span>
+                                </button>
+
+                                <button className='w-full flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg transition-all'>
+                                    <i className="ri-wallet-line text-xl"></i>
+                                    <span>Métodos de Pago</span>
+                                </button>
+
+                                <button className='w-full flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg transition-all'>
+                                    <i className="ri-settings-line text-xl"></i>
+                                    <span>Configuración</span>
+                                </button>
+
+                                <button className='w-full flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg transition-all'>
+                                    <i className="ri-question-line text-xl"></i>
+                                    <span>Ayuda</span>
+                                </button>
+
+                                <button 
+                                    onClick={() => navigate('/user-logout')}
+                                    className='w-full flex items-center gap-3 p-3 hover:bg-red-50 text-red-600 rounded-lg transition-all mt-4'
+                                >
+                                    <i className="ri-logout-box-line text-xl"></i>
+                                    <span>Cerrar Sesión</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
+
             <div className='h-screen w-screen'>
-                {/* image for temporary use  */}
                 <LiveTracking />
             </div>
-            <div className=' flex flex-col justify-end h-screen absolute top-0 w-full'>
-                <div className='h-[30%] p-6 bg-white relative'>
+
+            <div className='flex flex-col justify-end h-screen absolute top-0 w-full'>
+                <div className='h-[30%] p-4 sm:p-6 bg-white relative'>
                     <h5 ref={panelCloseRef} onClick={() => {
                         setPanelOpen(false)
-                    }} className='absolute opacity-0 right-6 top-6 text-2xl'>
+                    }} className='absolute opacity-0 right-4 sm:right-6 top-4 sm:top-6 text-2xl cursor-pointer'>
                         <i className="ri-arrow-down-wide-line"></i>
                     </h5>
-                    <h4 className='text-2xl font-semibold'>Buscar un viaje</h4>
+                    <h4 className='text-xl sm:text-2xl font-semibold'>Buscar un viaje</h4>
                     <form className='relative py-3' onSubmit={(e) => {
                         submitHandler(e)
                     }}>
@@ -223,7 +293,7 @@ const Home = () => {
                             }}
                             value={pickup}
                             onChange={handlePickupChange}
-                            className='bg-[#eee] px-12 py-2 text-lg rounded-lg w-full'
+                            className='bg-[#eee] px-12 py-2 text-base sm:text-lg rounded-lg w-full'
                             type="text"
                             placeholder='¿Dónde te recogemos?'
                         />
@@ -234,17 +304,18 @@ const Home = () => {
                             }}
                             value={destination}
                             onChange={handleDestinationChange}
-                            className='bg-[#eee] px-12 py-2 text-lg rounded-lg w-full  mt-3'
+                            className='bg-[#eee] px-12 py-2 text-base sm:text-lg rounded-lg w-full mt-3'
                             type="text"
-                            placeholder='¿A dónde vas?' />
+                            placeholder='¿A dónde vas?' 
+                        />
                     </form>
                     <button
                         onClick={findTrip}
-                        className='bg-black text-white px-4 py-2 rounded-lg mt-3 w-full'>
+                        className='bg-black text-white px-4 py-2 sm:py-3 rounded-lg mt-3 w-full font-medium hover:bg-gray-800 transition-all'>
                         Buscar Viaje
                     </button>
                 </div>
-                <div ref={panelRef} className='bg-white h-0'>
+                <div ref={panelRef} className='bg-white h-0 overflow-y-auto'>
                     <LocationSearchPanel
                         suggestions={activeField === 'pickup' ? pickupSuggestions : destinationSuggestions}
                         setPanelOpen={setPanelOpen}
@@ -255,36 +326,46 @@ const Home = () => {
                     />
                 </div>
             </div>
-            <div ref={vehiclePanelRef} className='fixed w-full z-10 bottom-0 translate-y-full bg-white px-3 py-10 pt-12'>
+
+            <div ref={vehiclePanelRef} className='fixed w-full z-10 bottom-0 translate-y-full bg-white px-3 sm:px-4 py-6 sm:py-10 pt-8 sm:pt-12 max-h-[80vh] overflow-y-auto'>
                 <VehiclePanel
                     selectVehicle={setVehicleType}
-                    fare={fare} setConfirmRidePanel={setConfirmRidePanel} setVehiclePanel={setVehiclePanel} />
+                    fare={fare} 
+                    setConfirmRidePanel={setConfirmRidePanel} 
+                    setVehiclePanel={setVehiclePanel} 
+                />
             </div>
-            <div ref={confirmRidePanelRef} className='fixed w-full z-10 bottom-0 translate-y-full bg-white px-3 py-6 pt-12'>
+
+            <div ref={confirmRidePanelRef} className='fixed w-full z-10 bottom-0 translate-y-full bg-white px-3 sm:px-4 py-4 sm:py-6 pt-8 sm:pt-12 max-h-[80vh] overflow-y-auto'>
                 <ConfirmRide
                     createRide={createRide}
                     pickup={pickup}
                     destination={destination}
                     fare={fare}
                     vehicleType={vehicleType}
-
-                    setConfirmRidePanel={setConfirmRidePanel} setVehicleFound={setVehicleFound} />
+                    setConfirmRidePanel={setConfirmRidePanel} 
+                    setVehicleFound={setVehicleFound} 
+                />
             </div>
-            <div ref={vehicleFoundRef} className='fixed w-full z-10 bottom-0 translate-y-full bg-white px-3 py-6 pt-12'>
+
+            <div ref={vehicleFoundRef} className='fixed w-full z-10 bottom-0 translate-y-full bg-white px-3 sm:px-4 py-4 sm:py-6 pt-8 sm:pt-12 max-h-[80vh] overflow-y-auto'>
                 <LookingForDriver
                     createRide={createRide}
                     pickup={pickup}
                     destination={destination}
                     fare={fare}
                     vehicleType={vehicleType}
-                    setVehicleFound={setVehicleFound} />
+                    setVehicleFound={setVehicleFound} 
+                />
             </div>
-            <div ref={waitingForDriverRef} className='fixed w-full  z-10 bottom-0  bg-white px-3 py-6 pt-12'>
+
+            <div ref={waitingForDriverRef} className='fixed w-full z-10 bottom-0 bg-white px-3 sm:px-4 py-4 sm:py-6 pt-8 sm:pt-12 max-h-[80vh] overflow-y-auto'>
                 <WaitingForDriver
                     ride={ride}
                     setVehicleFound={setVehicleFound}
                     setWaitingForDriver={setWaitingForDriver}
-                    waitingForDriver={waitingForDriver} />
+                    waitingForDriver={waitingForDriver} 
+                />
             </div>
         </div>
     )
