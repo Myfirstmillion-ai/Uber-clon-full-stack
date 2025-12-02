@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { CaptainDataContext } from '../context/CapatainContext'
+import { CaptainDataContext } from '../context/CaptainContext'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
@@ -10,10 +10,7 @@ const CaptainProtectWrapper = ({
     const token = localStorage.getItem('token')
     const navigate = useNavigate()
     const { captain, setCaptain } = useContext(CaptainDataContext)
-    const [ isLoading, setIsLoading ] = useState(true)
-
-
-
+    const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
         if (!token) {
@@ -30,22 +27,23 @@ const CaptainProtectWrapper = ({
                 setIsLoading(false)
             }
         })
-            .catch(err => {
-
-                localStorage.removeItem('token')
-                navigate('/captain-login')
-            })
-    }, [ token ])
-
-    
+        .catch(err => {
+            console.error('Error al verificar autenticación:', err)
+            localStorage.removeItem('token')
+            navigate('/captain-login')
+        })
+    }, [token])
 
     if (isLoading) {
         return (
-            <div>Loading...</div>
+            <div className='flex items-center justify-center h-screen'>
+                <div className='text-center'>
+                    <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4'></div>
+                    <p className='text-gray-600'>Cargando...</p>
+                </div>
+            </div>
         )
     }
-
-
 
     return (
         <>
