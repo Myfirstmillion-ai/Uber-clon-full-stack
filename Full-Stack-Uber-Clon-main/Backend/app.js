@@ -12,7 +12,7 @@ const rideRoutes = require('./routes/ride.routes');
 
 connectToDb();
 
-// Configuración CORS mejorada
+// Configuracion CORS
 const allowedOrigins = [
     process.env.FRONTEND_URL,
     'http://localhost:5173',
@@ -22,20 +22,17 @@ const allowedOrigins = [
 
 const corsOptions = {
     origin: function (origin, callback) {
-        // Permitir requests sin origin (como mobile apps)
         if (!origin) return callback(null, true);
         
-        // Si no hay FRONTEND_URL, permite todos
         if (!process.env.FRONTEND_URL) {
-            console.warn('⚠️  FRONTEND_URL no configurado. Permitiendo todos los orígenes.');
+            console.warn('WARNING: FRONTEND_URL no configurado. Permitiendo todos los origenes.');
             return callback(null, true);
         }
         
-        // Verificar si el origin está permitido
         if (allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
-            console.warn(`❌ Origen bloqueado: ${origin}`);
+            console.warn('Origen bloqueado por CORS: ' + origin);
             callback(new Error('No permitido por CORS'));
         }
     },
@@ -61,7 +58,7 @@ app.use((req, res, next) => {
 app.get('/', (req, res) => {
     res.json({
         status: 'OK',
-        message: 'Uber Clone API está funcionando',
+        message: 'Uber Clone API esta funcionando',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development'
     });
