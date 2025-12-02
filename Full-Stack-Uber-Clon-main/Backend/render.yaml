@@ -1,0 +1,23 @@
+# Render Blueprint for Uber Clone Backend
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: uber-clone-backend
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_CONNECT
+        sync: false
+      - key: GOOGLE_MAPS_API
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+    healthCheckPath: /
