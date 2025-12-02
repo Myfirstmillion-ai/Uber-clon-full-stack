@@ -6,61 +6,144 @@ const containerStyle = {
     height: '100%',
 };
 
-const center = {
-    lat: -3.745,
-    lng: -38.523
+// Coordenadas de San Antonio del Táchira, Venezuela
+// Centro de la zona de operación en la frontera
+const defaultCenter = {
+    lat: 7.8134,  // San Antonio del Táchira
+    lng: -72.4407
+};
+
+// Límites aproximados de la zona de operación
+// Incluye: Cúcuta, Villa del Rosario, Los Patios, Chinácota, San Antonio, Ureña, etc.
+const operationBounds = {
+    north: 8.0,    // Límite norte (aprox. norte de Cúcuta)
+    south: 7.6,    // Límite sur (aprox. sur de San Cristóbal)
+    east: -72.2,   // Límite este
+    west: -72.6    // Límite oeste
 };
 
 const LiveTracking = () => {
-    const [ currentPosition, setCurrentPosition ] = useState(center);
+    const [currentPosition, setCurrentPosition] = useState(defaultCenter);
+    const [mapCenter, setMapCenter] = useState(defaultCenter);
+    const [hasUserLocation, setHasUserLocation] = useState(false);
 
     useEffect(() => {
-        navigator.geolocation.getCurrentPosition((position) => {
-            const { latitude, longitude } = position.coords;
-            setCurrentPosition({
-                lat: latitude,
-                lng: longitude
-            });
-        });
+        // Intentar obtener la ubicación del usuario
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    
+                    // Verificar si la ubicación está dentro de la zona de operación
+                    const isInOperationZone = 
+                        latitude >= operationBounds.south &&
+                        latitude <= operationBounds.north &&
+                        longitude >= operationBounds.west &&
+                        longitude <= operationBounds.east;
 
-        const watchId = navigator.geolocation.watchPosition((position) => {
-            const { latitude, longitude } = position.coords;
-            setCurrentPosition({
-                lat: latitude,
-                lng: longitude
-            });
-        });
+                    if (isInOperationZone) {
+                        const userLocation = {
+                            lat: latitude,
+                            lng: longitude
+                        };
+                        setCurrentPosition(userLocation);
+                        setMapCenter(userLocation);
+                        setHasUserLocation(true);
+                    } else {
+                        // Si está fuera de la zona, mantener San Antonio del Táchira como centro
+                        console.log('Usuario fuera de la zona de operación');
+                        setMapCenter(defaultCenter);
+                    }
+                },
+                (error) => {
+                    console.error('Error al obtener ubicación:', error);
+                    // Mantener San Antonio del Táchira como centro por defecto
+                    setMapCenter(defaultCenter);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
+                }
+            );
 
-        return () => navigator.geolocation.clearWatch(watchId);
-    }, []);
+            // Actualizar la ubicación cada 10 segundos solo si el usuario está en la zona
+            const watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    
+                    const isInOperationZone = 
+                        latitude >= operationBounds.south &&
+                        latitude <= operationBounds.north &&
+                        longitude >= operationBounds.west &&
+                        longitude <= operationBounds.east;
 
-    useEffect(() => {
-        const updatePosition = () => {
-            navigator.geolocation.getCurrentPosition((position) => {
-                const { latitude, longitude } = position.coords;
+                    if (isInOperationZone) {
+                        setCurrentPosition({
+                            lat: latitude,
+                            lng: longitude
+                        });
+                        setHasUserLocation(true);
+                    }
+                },
+                (error) => {
+                    console.error('Error al rastrear ubicación:', error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 30000 // 30 segundos
+                }
+            );
 
-                console.log('Position updated:', latitude, longitude);
-                setCurrentPosition({
-                    lat: latitude,
-                    lng: longitude
-                });
-            });
-        };
-
-        updatePosition(); // Initial position update
-
-        const intervalId = setInterval(updatePosition, 1000); // Update every 10 seconds
-
+            return () => {
+                if (watchId) {
+                    navigator.geolocation.clearWatch(watchId);
+                }
+            };
+        } else {
+            console.log('Geolocalización no soportada');
+            setMapCenter(defaultCenter);
+        }
     }, []);
 
     return (
         <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
             <GoogleMap
                 mapContainerStyle={containerStyle}
-                center={currentPosition}
-                zoom={15}
+                center={mapCenter}
+                zoom={hasUserLocation ? 15 : 13}
+                options={{
+                    zoomControl: true,
+                    mapTypeControl: false,
+                    streetViewControl: false,
+                    fullscreenControl: false,
+                    styles: [
+                        {
+                            featureType: "poi",
+                            elementType: "labels",
+                            stylers: [{ visibility: "off" }]
+                        }
+                    ],
+                    restriction: {
+                        latLngBounds: operationBounds,
+                        strictBounds: false
+                    }
+                }}
             >
-                <Marker position={currentPosition} />
+                {hasUserLocation && (
+                    <Marker 
+                        position={currentPosition}
+                        icon={{
+                            path: window.google?.maps?.SymbolPath?.CIRCLE || 0,
+                            scale: 8,
+                            fillColor: "#4285F4",
+                            fillOpacity: 1,
+                            strokeColor: "#ffffff",
+                            strokeWeight: 3
+                        }}
+                    />
+                )}
             </GoogleMap>
         </LoadScript>
     )
