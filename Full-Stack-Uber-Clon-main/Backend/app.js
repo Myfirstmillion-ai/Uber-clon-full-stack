@@ -12,24 +12,34 @@ const rideRoutes = require('./routes/ride.routes');
 
 connectToDb();
 
-// Configuracion CORS
+// Configuracion CORS con soporte para multiples dominios de Vercel
 const allowedOrigins = [
     process.env.FRONTEND_URL,
+    'https://uber-camilo.vercel.app',
     'http://localhost:5173',
     'http://localhost:3000',
     'http://localhost:4173'
 ].filter(Boolean);
 
+// Funcion para verificar si es un dominio de Vercel
+const isVercelDomain = (origin) => {
+    if (!origin) return false;
+    return origin.includes('vercel.app');
+};
+
 const corsOptions = {
     origin: function (origin, callback) {
+        // Permitir requests sin origin (mobile apps, Postman, etc)
         if (!origin) return callback(null, true);
         
+        // Si no hay FRONTEND_URL configurado, permite todos en desarrollo
         if (!process.env.FRONTEND_URL) {
             console.warn('WARNING: FRONTEND_URL no configurado. Permitiendo todos los origenes.');
             return callback(null, true);
         }
         
-        if (allowedOrigins.indexOf(origin) !== -1) {
+        // Verificar si es un dominio de Vercel o esta en la lista permitida
+        if (isVercelDomain(origin) || allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
             console.warn('Origen bloqueado por CORS: ' + origin);
